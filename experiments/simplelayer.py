@@ -23,7 +23,7 @@ class SimpleLayer:
         self.excitatory_connections = np.where(connections > 0, connections, 0)
         self.excitatory_connections = self.excitatory_connections/ np.linalg.norm(self.excitatory_connections, axis=1)[:, np.newaxis]
         self.inhibitory_connections = np.where(connections < 0, connections, 0)
-        self.inhibitory_connections = self.inhibitory_connections / np.linalg.norm(self.inhibitory_connections, axis=1)[:, np.newaxis]
+        self.inhibitory_connections = np.abs(self.inhibitory_connections) / np.linalg.norm(self.inhibitory_connections, axis=1)[:, np.newaxis]
 
     def activations(self) -> np.ndarray:
         return (self.potential > self.thresholds).astype(float)
@@ -33,6 +33,6 @@ class SimpleLayer:
             activations = self.activations()
         excitations = self.excitatory_connections.dot(activations)
         inhibitions = self.inhibitory_connections.dot(activations)
-        computed_update = excitations + inhibitions
+        computed_update = excitations - inhibitions
         computed_potential = self.potential * self.potential_decay + np.where(computed_update > 0, computed_update, 0)
         self.potential = np.where(activations > 0, self.refractory_value, computed_potential)
