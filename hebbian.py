@@ -28,7 +28,7 @@ if __name__ == "__main__":
         activation_threshold = st.slider("activation_threshold", min_value=0.0, max_value=1.0, value=0.8)
         refractory_value = st.slider("refractory_value", min_value=-10.0, max_value=0.0, value=-0.2)
 
-        learning_rate = st.slider("learning_rate", min_value=0.00, max_value=1.00, value=0.01)
+        learning_rate = st.slider("learning_rate", min_value=0.00, max_value=1.00, value=0.20)
 
     np.random.seed(SEED)
     l = SimpleLayer(
