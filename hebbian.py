@@ -13,12 +13,12 @@ SEED = 0
 
 if __name__ == "__main__":
     st.title("Hebbian")
-    # st.markdown(
-    #     """
-    #     The goal of this experiment is to validate a model using `SimpleLayer` where the activity
-    #     can remain somewhat constant with a variety of neuron activations.
-    #     """
-    # )
+    st.markdown(
+        """
+        The goal of this experiment is to validate a model using `Hebbian` learning
+        reaches somewhat stable patterns after a few iterations.
+        """
+    )
 
     with st.sidebar:
         n = st.slider("n", min_value=1, max_value=100, value=50)
