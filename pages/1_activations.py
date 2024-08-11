@@ -11,6 +11,7 @@ SEED = 0
 
 
 if __name__ == "__main__":
+    st.set_page_config(layout="centered")
     st.title("Activations")
     st.markdown(
         """
@@ -63,6 +64,6 @@ if __name__ == "__main__":
     pot_fig = px.imshow(np.transpose(potential_records))
     st.plotly_chart(pot_fig, theme="streamlit", use_container_width=True)
     st.caption("Neuron potential across time")
-    con_fig = px.imshow(np.transpose(l.excitatory_connections - l.inhibitory_connections), origin="lower")
+    con_fig = px.imshow(np.transpose(l.weights.excitatory_connections - l.weights.inhibitory_connections), origin="lower")
     st.plotly_chart(con_fig, theme="streamlit", use_container_width=True)
     st.caption("Connections")

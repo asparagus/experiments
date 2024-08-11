@@ -4,6 +4,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
+from experiments.homeostasis import normalize_inputs, normalize_outputs
 from experiments.learning import HebbianLearning
 from experiments.simplelayer import SimpleLayer
 
@@ -12,11 +13,12 @@ SEED = 0
 
 
 if __name__ == "__main__":
-    st.title("Hebbian")
+    st.set_page_config(layout="centered")
+    st.title("Homeostasis")
     st.markdown(
         """
-        The goal of this experiment is to validate a model using `Hebbian` learning
-        reaches somewhat stable patterns after a few iterations.
+        The goal of this experiment is to try out functionality for maintaining homeostasis.
+        Synaptic strength cannot increase indefinitely. Is learning still possible while applying this constraint?
         """
     )
 
@@ -24,11 +26,13 @@ if __name__ == "__main__":
         n = st.slider("n", min_value=1, max_value=100, value=50)
         steps = st.slider("steps", min_value=10, max_value=100, value=50)
 
-        potential_decay = st.slider("potential_decay", min_value=0.0, max_value=1.0, value=0.9)
-        activation_threshold = st.slider("activation_threshold", min_value=0.0, max_value=1.0, value=0.8)
+        potential_decay = st.slider("potential_decay", min_value=0.0, max_value=1.0, value=0.85)
+        activation_threshold = st.slider("activation_threshold", min_value=0.0, max_value=1.0, value=0.85)
         refractory_value = st.slider("refractory_value", min_value=-10.0, max_value=0.0, value=-0.2)
 
         learning_rate = st.slider("learning_rate", min_value=0.00, max_value=1.00, value=0.20)
+        norm_inputs = st.checkbox("normalize_inputs", value=False)
+        norm_outputs = st.checkbox("normalize_outputs", value=False)
 
     np.random.seed(SEED)
     l = SimpleLayer(
@@ -46,8 +50,14 @@ if __name__ == "__main__":
         activation_records.append(activations)
         l.tick(activations=activations)
         next_activations = l.activations()
-        l.excitatory_connections = h.excitatory_update(old_activations=activations, new_activations=next_activations, excitatory_connections=l.excitatory_connections)
-        l.inhibitory_connections = h.inhibitory_update(old_activations=activations, new_activations=next_activations, inhibitory_connections=l.inhibitory_connections)
+        l.weights.excitatory_connections = h.excitatory_update(old_activations=activations, new_activations=next_activations, excitatory_connections=l.weights.excitatory_connections)
+        l.weights.inhibitory_connections = h.inhibitory_update(old_activations=activations, new_activations=next_activations, inhibitory_connections=l.weights.inhibitory_connections)
+        if norm_inputs:
+            l.weights.excitatory_connections = normalize_inputs(l.weights.excitatory_connections)
+            l.weights.inhibitory_connections = normalize_inputs(l.weights.inhibitory_connections)
+        if norm_outputs:
+            l.weights.excitatory_connections = normalize_outputs(l.weights.excitatory_connections)
+            l.weights.inhibitory_connections = normalize_outputs(l.weights.inhibitory_connections)
         activations = next_activations
 
     all_activations = [
@@ -71,6 +81,6 @@ if __name__ == "__main__":
     pot_fig = px.imshow(np.transpose(potential_records), origin="lower")
     st.plotly_chart(pot_fig, theme="streamlit", use_container_width=True)
     st.caption("Neuron potential across time")
-    con_fig = px.imshow(np.transpose(l.excitatory_connections - l.inhibitory_connections), origin="lower")
+    con_fig = px.imshow(np.transpose(l.weights.excitatory_connections - l.weights.inhibitory_connections), origin="lower")
     st.plotly_chart(con_fig, theme="streamlit", use_container_width=True)
     st.caption("Connections at the end")
