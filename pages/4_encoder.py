@@ -4,7 +4,6 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from experiments.homeostasis import normalize_inputs, normalize_outputs
 from experiments.io import CyclicEncoder
 from experiments.learning import HebbianLearning
 from experiments.simplelayer import SimpleLayer, Weights
@@ -58,6 +57,8 @@ if __name__ == "__main__":
     encoder_weights = Weights(n=n)
 
     input_values = []
+    output_potentials = []
+    output_activations = []
     activation_records = []
     potential_records = []
     activations = l.activations()
@@ -65,20 +66,23 @@ if __name__ == "__main__":
         current_input = options[i % len(options)]
         encoding = ce.encode(0 if np.isnan(current_input) else current_input)
         input_values.append(encoding)
+
         potential_records.append(l.potential)
         activation_records.append(activations)
-        l.tick(activations=activations)
-        l.potential += encoder_weights.compute(encoding)
+        l.tick(activations=activations, external_update=10 * encoder_weights.compute(encoding))
         next_activations = l.activations()
-        l.weights.excitatory_connections = h.excitatory_update(old_activations=activations, new_activations=next_activations, excitatory_connections=l.weights.excitatory_connections)
-        l.weights.inhibitory_connections = h.inhibitory_update(old_activations=activations, new_activations=next_activations, inhibitory_connections=l.weights.inhibitory_connections)
+        h.update(old_activations=activations, new_activations=next_activations, weights=l.weights)
+        h.update(old_activations=encoding, new_activations=next_activations, weights=encoder_weights)
         if norm_inputs:
-            l.weights.excitatory_connections = normalize_inputs(l.weights.excitatory_connections)
-            l.weights.inhibitory_connections = normalize_inputs(l.weights.inhibitory_connections)
+            l.weights.normalize_inputs()
+            encoder_weights.normalize_inputs()
         if norm_outputs:
-            l.weights.excitatory_connections = normalize_outputs(l.weights.excitatory_connections)
-            l.weights.inhibitory_connections = normalize_outputs(l.weights.inhibitory_connections)
+            l.weights.normalize_outputs()
+            encoder_weights.normalize_outputs()
         activations = next_activations
+        output_potential = encoder_weights.compute_transposed(activations)
+        output_potentials.append(output_potential)
+        output_activations.append(output_potential > activation_threshold)
 
     all_activations = np.roll(np.transpose(np.nonzero(activation_records)), shift=1, axis=1)
     
@@ -92,12 +96,23 @@ if __name__ == "__main__":
             st.metric("Firing period", value=f"{firing_period:.2f} seconds")
             st.metric("Average activation", value=f"{average_activation:.2f}%")
     with mid:
-        inputs_tab, outputs_tab = st.tabs(["Inputs", "Outputs"])
+        inputs_tab, output_potentials_tab, outputs_tab = st.tabs(["Inputs", "Output Potentials", "Outputs"])
         with inputs_tab:
-            mid_fig = px.imshow(np.transpose(input_values), origin="lower")
-            mid_fig.update_xaxes(title="time")
-            mid_fig.update_yaxes(title="neuron_index")
-            st.plotly_chart(mid_fig, theme="streamlit", use_container_width=True)
+            inputs_fig = px.imshow(np.transpose(input_values), origin="lower")
+            inputs_fig.update_xaxes(title="time")
+            inputs_fig.update_yaxes(title="neuron_index")
+            st.plotly_chart(inputs_fig, theme="streamlit", use_container_width=True)
+        with output_potentials_tab:
+            output_potentials_fig = px.imshow(np.transpose(output_potentials), origin="lower")
+            output_potentials_fig.update_xaxes(title="time")
+            output_potentials_fig.update_yaxes(title="neuron_index")
+            st.plotly_chart(output_potentials_fig, theme="streamlit", use_container_width=True)
+        with outputs_tab:
+            outputs_fig = px.imshow(np.transpose(output_activations), origin="lower")
+            outputs_fig.update_xaxes(title="time")
+            outputs_fig.update_yaxes(title="neuron_index")
+            st.plotly_chart(outputs_fig, theme="streamlit", use_container_width=True)
+
     with rght:
         activations_tab, potential_tab, connections_tab = st.tabs(["Activations", "Potential", "Connections"])
         with activations_tab:

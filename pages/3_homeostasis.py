@@ -4,7 +4,6 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 
-from experiments.homeostasis import normalize_inputs, normalize_outputs
 from experiments.learning import HebbianLearning
 from experiments.simplelayer import SimpleLayer
 
@@ -50,14 +49,11 @@ if __name__ == "__main__":
         activation_records.append(activations)
         l.tick(activations=activations)
         next_activations = l.activations()
-        l.weights.excitatory_connections = h.excitatory_update(old_activations=activations, new_activations=next_activations, excitatory_connections=l.weights.excitatory_connections)
-        l.weights.inhibitory_connections = h.inhibitory_update(old_activations=activations, new_activations=next_activations, inhibitory_connections=l.weights.inhibitory_connections)
+        h.update(old_activations=activations, new_activations=next_activations, weights=l.weights)
         if norm_inputs:
-            l.weights.excitatory_connections = normalize_inputs(l.weights.excitatory_connections)
-            l.weights.inhibitory_connections = normalize_inputs(l.weights.inhibitory_connections)
+            l.weights.normalize_inputs()
         if norm_outputs:
-            l.weights.excitatory_connections = normalize_outputs(l.weights.excitatory_connections)
-            l.weights.inhibitory_connections = normalize_outputs(l.weights.inhibitory_connections)
+            l.weights.normalize_outputs()
         activations = next_activations
 
     all_activations = [

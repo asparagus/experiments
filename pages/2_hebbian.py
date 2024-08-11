@@ -47,8 +47,7 @@ if __name__ == "__main__":
         activation_records.append(activations)
         l.tick(activations=activations)
         next_activations = l.activations()
-        l.weights.excitatory_connections = h.excitatory_update(old_activations=activations, new_activations=next_activations, excitatory_connections=l.weights.excitatory_connections)
-        l.weights.inhibitory_connections = h.inhibitory_update(old_activations=activations, new_activations=next_activations, inhibitory_connections=l.weights.inhibitory_connections)
+        h.update(old_activations=activations, new_activations=next_activations, weights=l.weights)
         activations = next_activations
 
     all_activations = [

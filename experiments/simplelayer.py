@@ -27,9 +27,11 @@ class SimpleLayer:
     def activations(self) -> np.ndarray:
         return (self.potential > self.thresholds).astype(float)
 
-    def tick(self, activations: Optional[np.ndarray] = None):
+    def tick(self, activations: Optional[np.ndarray] = None, external_update: Optional[np.ndarray | float] = None):
         if activations is None:
             activations = self.activations()
+        if external_update is None:
+            external_update = 0.0
         update = self.weights.compute(activations=activations)
-        future_potential = self.potential * self.potential_decay + update
+        future_potential = self.potential * self.potential_decay + update + external_update
         self.potential = np.where(activations > 0, self.refractory_value, future_potential)
