@@ -13,9 +13,9 @@ Brain related experiments
 ![image](https://github.com/user-attachments/assets/7442f696-12d6-4a5c-95fe-69929e6b118d)
 
 ### Encoding Input/Output
-Input values
+#### Input values
 ![image](https://github.com/user-attachments/assets/4f854de7-93ad-4b67-b69a-389fafdcbfec)
-Output potential
+#### Output potential
 ![image](https://github.com/user-attachments/assets/13cdb24e-f9fe-4baa-a425-e497dbc1cdfb)
-Output activations
+#### Output activations
 ![image](https://github.com/user-attachments/assets/a0cbc438-d51d-4e53-807f-3dcd713f2439)
